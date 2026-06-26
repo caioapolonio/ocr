@@ -7,9 +7,10 @@ dist/
 coverage/
 *.tsbuildinfo
 
-# ambiente
+# ambiente (NUNCA versionar segredos — repo público)
 .env
-.env.*.local
+.env.*
+!.env.example
 
 # logs
 *.log

@@ -1,0 +1,41 @@
+{
+  "name": "@ocr/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend REST (Fastify + Postgres + Drizzle) para carteirinhas de estudante.",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^6.0.0",
+    "@ocr/core": "workspace:*",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.8.5",
+    "fastify-type-provider-zod": "^7.0.0",
+    "postgres": "^3.4.9",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@ocr/eslint-config": "workspace:*",
+    "@ocr/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^9.20.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.8.0",
+    "vitest": "^3.1.0"
+  }
+}

@@ -1,14 +1,6 @@
 import { z } from 'zod';
 import { educationLevelSchema, syncStatusSchema } from './enums';
-
-/** Data simples no formato ISO `YYYY-MM-DD`. */
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use o formato YYYY-MM-DD');
-
-/** Timestamp ISO 8601 completo (ex.: `2026-06-26T12:00:00.000Z`). */
-const isoDateTime = z.string().datetime({ offset: true });
-
-/** CPF mascarado `000.000.000-00`. */
-const cpf = z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido');
+import { cpf, isoDate, isoDateTime } from './primitives';
 
 /**
  * Modelo canônico de uma carteirinha de estudante.
