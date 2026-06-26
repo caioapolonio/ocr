@@ -18,7 +18,7 @@ estudos em **React Native (Expo)** + **Node.js/TypeScript**.
 ```
 apps/
   mobile/   # app Expo (a partir do M2)
-  api/      # backend Fastify (a partir do M1)
+  api/      # backend Fastify + Drizzle/Postgres (REST /api/v1/cards)
 packages/
   core/     # @ocr/core — domínio compartilhado (schemas + parser)
   tsconfig/ # base de TypeScript
@@ -45,8 +45,17 @@ pnpm lint             # ESLint
 
 ## Status
 
-Veja o **Roadmap** em [`specs.md`](./specs.md#13-roadmap). Estado atual: **M0 — Fundação**
-(monorepo + `@ocr/core` com schemas e parser testados).
+Veja o **Roadmap** em [`specs.md`](./specs.md#13-roadmap). Estado atual: **M1 — Backend MVP**
+(API REST `/api/v1/cards` em Fastify + Drizzle/Postgres, com OpenAPI em `/docs`).
+
+### Rodando a API (M1)
+
+```bash
+cp .env.example apps/api/.env          # ajuste se necessário (credenciais locais)
+docker compose up -d                   # Postgres local
+pnpm --filter @ocr/api db:migrate      # aplica as migrations
+pnpm --filter @ocr/api dev             # API em http://localhost:3333 (Swagger em /docs)
+```
 
 ## Licença
 

@@ -158,8 +158,8 @@ ocr/
 
 ## 13. Roadmap
 
-- **M0 — Fundação ✅ (atual):** monorepo, configs compartilhadas e `@ocr/core` (schemas + parser + testes).
-- **M1 — Backend MVP:** Fastify + Postgres + Drizzle + REST `/cards` + Swagger.
+- **M0 — Fundação ✅:** monorepo, configs compartilhadas e `@ocr/core` (schemas + parser + testes).
+- **M1 — Backend MVP ✅ (atual):** Fastify + Postgres + Drizzle + REST `/cards` + Swagger + OpenAPI.
 - **M2 — Mobile base:** Expo + Router + Dev Client + expo-sqlite/Drizzle + telas com mock.
 - **M3 — OCR on-device:** câmera + ML Kit + parser do `core` + tela de revisão.
 - **M4 — Sync engine:** outbox + push/pull + LWW + triggers de conectividade.
