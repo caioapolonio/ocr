@@ -1,0 +1,38 @@
+{
+  "name": "@ocr/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Domínio compartilhado: modelo de dados, schemas Zod e parser de OCR (sem dependências nativas).",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@ocr/eslint-config": "workspace:*",
+    "@ocr/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^9.20.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.1.0"
+  }
+}

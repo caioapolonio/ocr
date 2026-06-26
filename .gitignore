@@ -1,0 +1,28 @@
+# dependências
+node_modules/
+
+# builds / caches
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# ambiente
+.env
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Expo / EAS (a partir do M2)
+.expo/
+.expo-shared/
+ios/
+android/
+
+# SO / editor
+.DS_Store
+.idea/
+*.swp

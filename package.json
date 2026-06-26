@@ -1,0 +1,22 @@
+{
+  "name": "carteirinha-ocr",
+  "version": "0.0.0",
+  "private": true,
+  "description": "App offline-first que lê carteirinhas de estudante via OCR on-device e sincroniza com um backend.",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "check": "turbo run typecheck lint test"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.0"
+  }
+}
