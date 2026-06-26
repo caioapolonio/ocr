@@ -1,0 +1,22 @@
+CREATE TABLE `cards` (
+	`id` text PRIMARY KEY NOT NULL,
+	`full_name` text NOT NULL,
+	`institution` text NOT NULL,
+	`course` text,
+	`education_level` text,
+	`registration_number` text,
+	`document_number` text,
+	`issuer` text,
+	`cpf` text,
+	`birth_date` text,
+	`valid_until` text,
+	`photo_uri` text,
+	`raw_ocr_text` text NOT NULL,
+	`ocr_confidence` real,
+	`server_id` text,
+	`version` integer DEFAULT 0 NOT NULL,
+	`sync_status` text DEFAULT 'pending' NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	`deleted_at` text
+);
