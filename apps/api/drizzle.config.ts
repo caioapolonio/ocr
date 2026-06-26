@@ -9,6 +9,6 @@ export default defineConfig({
   schema: './src/db/schema.ts',
   out: './src/db/migrations',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgresql://ocr:ocr@localhost:5432/ocr',
+    url: process.env.DATABASE_URL ?? 'postgresql://ocr:ocr@localhost:55432/ocr',
   },
 });

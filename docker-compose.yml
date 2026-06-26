@@ -10,7 +10,8 @@ services:
       POSTGRES_PASSWORD: ocr
       POSTGRES_DB: ocr
     ports:
-      - '5432:5432'
+      # 55432 no host: 5432/5433 costumam estar ocupadas (Postgres local, túnel SSH, etc.)
+      - '55432:5432'
     volumes:
       - ocr-pgdata:/var/lib/postgresql/data
     healthcheck:
