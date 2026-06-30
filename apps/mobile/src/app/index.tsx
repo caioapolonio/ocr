@@ -19,7 +19,7 @@ export default function CardsListScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <Text style={styles.empty}>
-            Nenhuma carteirinha ainda.{'\n'}Toque em “＋ Simular OCR”.
+            Nenhuma carteirinha ainda.{'\n'}Toque em “📷 Escanear”.
           </Text>
         }
         renderItem={({ item }) => (
@@ -34,11 +34,18 @@ export default function CardsListScreen() {
         )}
       />
 
-      <Link href="/scan" asChild>
-        <Pressable style={styles.fab} accessibilityRole="button">
-          <Text style={styles.fabText}>＋ Simular OCR</Text>
-        </Pressable>
-      </Link>
+      <View style={styles.actions}>
+        <Link href="/camera" asChild>
+          <Pressable style={styles.primaryAction} accessibilityRole="button">
+            <Text style={styles.primaryActionText}>📷 Escanear</Text>
+          </Pressable>
+        </Link>
+        <Link href="/scan" asChild>
+          <Pressable style={styles.secondaryAction} accessibilityRole="button">
+            <Text style={styles.secondaryActionText}>Simular</Text>
+          </Pressable>
+        </Link>
+      </View>
     </View>
   );
 }
@@ -68,19 +75,36 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   badgePending: { color: '#9a3412', backgroundColor: '#ffedd5' },
-  fab: {
+  actions: {
     position: 'absolute',
-    right: 20,
-    bottom: 32,
+    left: 16,
+    right: 16,
+    bottom: 28,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  primaryAction: {
+    flex: 1,
     backgroundColor: '#208AEF',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 999,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  fabText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  primaryActionText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  secondaryAction: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  secondaryActionText: { color: '#334155', fontWeight: '600', fontSize: 15 },
 });

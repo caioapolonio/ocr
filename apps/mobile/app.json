@@ -8,9 +8,11 @@
     "scheme": "carteirinhaocr",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.caioapolonio.carteirinhaocr",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.caioapolonio.carteirinhaocr",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -35,7 +37,11 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-camera",
+        { "cameraPermission": "Permite ler sua carteirinha de estudante pela câmera." }
+      ]
     ]
   }
 }

@@ -28,6 +28,7 @@ export default function RootLayout() {
   return (
     <Stack screenOptions={{ headerTintColor: '#208AEF' }}>
       <Stack.Screen name="index" options={{ title: 'Carteirinhas' }} />
+      <Stack.Screen name="camera" options={{ title: 'Escanear', presentation: 'modal' }} />
       <Stack.Screen name="scan" options={{ title: 'Simular OCR', presentation: 'modal' }} />
       <Stack.Screen name="card/[id]" options={{ title: 'Carteirinha' }} />
     </Stack>
