@@ -13,6 +13,7 @@ export type CardContent = Pick<
   | 'educationLevel'
   | 'registrationNumber'
   | 'documentNumber'
+  | 'cia'
   | 'issuer'
   | 'cpf'
   | 'birthDate'
@@ -35,6 +36,7 @@ export function parsedToContent(
     educationLevel: parsed.educationLevel ?? null,
     registrationNumber: parsed.registrationNumber ?? null,
     documentNumber: parsed.documentNumber ?? null,
+    cia: parsed.cia ?? null,
     issuer: parsed.issuer ?? null,
     cpf: parsed.cpf ?? null,
     birthDate: parsed.birthDate ?? null,

@@ -9,6 +9,7 @@ export interface ParsedStudentCard {
   educationLevel?: EducationLevel;
   registrationNumber?: string;
   documentNumber?: string;
+  cia?: string;
   issuer?: string;
   cpf?: string;
   birthDate?: string; // YYYY-MM-DD
@@ -230,6 +231,10 @@ export function parseStudentCard(rawOcrText: string): ParseResult {
     'carteira no',
   ]);
   if (documentNumber) fields.documentNumber = documentNumber;
+
+  // CIA: identificador impresso no verso da carteirinha (rótulo literal "CIA").
+  const cia = findByLabel(lines, ['cia']);
+  if (cia) fields.cia = cia;
 
   const issuer = findIssuer(rawOcrText);
   if (issuer) fields.issuer = issuer;

@@ -17,6 +17,7 @@ export const cards = sqliteTable('cards', {
   educationLevel: text('education_level', { enum: EDUCATION_LEVELS }),
   registrationNumber: text('registration_number'),
   documentNumber: text('document_number'),
+  cia: text('cia'),
   issuer: text('issuer'),
   cpf: text('cpf'),
   birthDate: text('birth_date'),

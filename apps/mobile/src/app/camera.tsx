@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { CardReviewForm } from '@/features/cards/CardReviewForm';
 import { parsedToContent, type CardContent } from '@/features/cards/mutations';
-import { recognizeCard } from '@/features/ocr/recognize';
+import { recognizeCards } from '@/features/ocr/recognize';
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState<'front' | 'back'>('front');
+  const [frontUri, setFrontUri] = useState<string | null>(null);
   const [parsed, setParsed] = useState<{ content: CardContent; confidence: number } | null>(null);
 
   if (!permission) {
@@ -42,27 +44,56 @@ export default function CameraScreen() {
     return (
       <ScrollView contentContainerStyle={styles.reviewContent} keyboardShouldPersistTaps="handled">
         <CardReviewForm initial={parsed.content} confidence={parsed.confidence} />
-        <Pressable style={styles.ghostBtn} onPress={() => setParsed(null)}>
-          <Text style={styles.ghostBtnText}>Refazer foto</Text>
+        <Pressable style={styles.ghostBtn} onPress={reset}>
+          <Text style={styles.ghostBtnText}>Refazer fotos</Text>
         </Pressable>
       </ScrollView>
     );
   }
 
-  async function capture() {
-    const camera = cameraRef.current;
-    if (!camera || busy) return;
-    setBusy(true);
+  function reset() {
+    setParsed(null);
+    setFrontUri(null);
+    setStep('front');
+  }
+
+  async function recognizeAndReview(front: string, back?: string) {
     try {
-      const photo = await camera.takePictureAsync({ quality: 0.85 });
-      if (!photo) return;
-      const result = await recognizeCard(photo.uri);
+      const result = await recognizeCards(front, back);
       setParsed({
         content: parsedToContent(result.fields, result.rawOcrText, result.confidence),
         confidence: result.confidence,
       });
     } catch (error) {
       Alert.alert('Falha no OCR', error instanceof Error ? error.message : 'Tente novamente.');
+    }
+  }
+
+  async function onShutter() {
+    const camera = cameraRef.current;
+    if (!camera || busy) return;
+    setBusy(true);
+    try {
+      const photo = await camera.takePictureAsync({ quality: 0.85 });
+      if (!photo) return;
+      if (step === 'front') {
+        setFrontUri(photo.uri);
+        setStep('back');
+      } else if (frontUri) {
+        await recognizeAndReview(frontUri, photo.uri);
+      }
+    } catch (error) {
+      Alert.alert('Falha na captura', error instanceof Error ? error.message : 'Tente novamente.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function skipBack() {
+    if (busy || !frontUri) return;
+    setBusy(true);
+    try {
+      await recognizeAndReview(frontUri);
     } finally {
       setBusy(false);
     }
@@ -71,15 +102,26 @@ export default function CameraScreen() {
   return (
     <View style={styles.container}>
       <CameraView ref={cameraRef} style={styles.camera} facing="back" />
-      <Text style={styles.hint}>Enquadre a carteirinha e toque em Capturar.</Text>
+      <Text style={styles.hint}>
+        {step === 'front'
+          ? 'Enquadre a FRENTE da carteirinha e toque em Capturar.'
+          : 'Frente capturada ✓ — agora enquadre o VERSO (onde fica a CIA).'}
+      </Text>
       <View style={styles.controls}>
         <Pressable
           style={[styles.shutter, busy && styles.shutterBusy]}
-          onPress={capture}
+          onPress={onShutter}
           disabled={busy}
         >
-          <Text style={styles.shutterText}>{busy ? 'Lendo…' : 'Capturar'}</Text>
+          <Text style={styles.shutterText}>
+            {busy ? 'Lendo…' : step === 'front' ? 'Capturar frente' : 'Capturar verso'}
+          </Text>
         </Pressable>
+        {step === 'back' && !busy ? (
+          <Pressable style={styles.skipBtn} onPress={skipBack}>
+            <Text style={styles.skipBtnText}>Pular verso e continuar</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -98,6 +140,8 @@ const styles = StyleSheet.create({
   },
   shutterBusy: { opacity: 0.6 },
   shutterText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  skipBtn: { marginTop: 16, paddingVertical: 10, paddingHorizontal: 16 },
+  skipBtnText: { color: '#94a3b8', fontWeight: '600', fontSize: 14 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
   muted: { color: '#475569', textAlign: 'center' },
   btn: { backgroundColor: '#208AEF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },

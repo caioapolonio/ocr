@@ -29,6 +29,17 @@ const CARD_ETEC = [
 
 const CARD_MINIMAL = ['CARTEIRINHA', 'Nome: Ana P.', 'Validade 31/03/2026'].join('\n');
 
+// Texto combinado frente+verso (como o app concatena as duas fotos): a CIA vem do verso.
+const CARD_FRONT_BACK = [
+  'CARTEIRA DE IDENTIFICAÇÃO ESTUDANTIL',
+  'UBES - União Brasileira dos Estudantes Secundaristas',
+  'Nome: Bruno Almeida Lima',
+  'Instituição: Colégio Estadual Dom Pedro II',
+  'Matrícula: 2024987654',
+  'Validade: 31/03/2026',
+  'CIA: 000123456',
+].join('\n');
+
 describe('parseStudentCard', () => {
   it('extrai todos os campos de uma carteirinha bem formatada (layout com rótulos)', () => {
     const { fields, confidence } = parseStudentCard(CARD_UNE);
@@ -79,6 +90,16 @@ describe('parseStudentCard', () => {
     const { fields, confidence } = parseStudentCard('');
     expect(fields).toEqual({});
     expect(confidence).toBe(0);
+  });
+
+  it('extrai a CIA (rótulo do verso) do texto combinado frente+verso', () => {
+    const { fields } = parseStudentCard(CARD_FRONT_BACK);
+
+    expect(fields.cia).toBe('000123456');
+    expect(fields.fullName).toBe('Bruno Almeida Lima');
+    expect(fields.institution).toBe('Colégio Estadual Dom Pedro II');
+    // Cartões sem CIA não inventam o campo.
+    expect(parseStudentCard(CARD_MINIMAL).fields.cia).toBeUndefined();
   });
 
   it('produz um StudentCard válido ao combinar o parsing com metadados de sync', () => {

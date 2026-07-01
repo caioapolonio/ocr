@@ -43,6 +43,7 @@ export function CardReviewForm(props: { initial: CardContent; confidence: number
         value={form.registrationNumber ?? ''}
         onChangeText={(t) => update({ registrationNumber: t })}
       />
+      <Field label="CIA" value={form.cia ?? ''} onChangeText={(t) => update({ cia: t })} />
       <Field
         label="Validade (AAAA-MM-DD)"
         value={form.validUntil ?? ''}

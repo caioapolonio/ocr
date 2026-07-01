@@ -108,6 +108,7 @@ export default function CardDetailScreen() {
         <Row label="Nível" value={card.educationLevel} />
         <Row label="Matrícula" value={card.registrationNumber} />
         <Row label="Documento" value={card.documentNumber} />
+        <Row label="CIA" value={card.cia} />
         <Row label="Emissor" value={card.issuer} />
         <Row label="CPF" value={card.cpf} />
         <Row label="Nascimento" value={card.birthDate} />
