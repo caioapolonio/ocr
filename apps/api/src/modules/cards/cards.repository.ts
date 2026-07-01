@@ -14,6 +14,8 @@ export interface ListCardsOptions {
  */
 export interface CardsRepository {
   list(options: ListCardsOptions): Promise<ServerCard[]>;
+  /** Todas as carteirinhas com `updatedAt > since` (inclui deletadas). Base do pull de sync. */
+  listSince(since: string | null): Promise<ServerCard[]>;
   findById(id: string): Promise<ServerCard | null>;
   create(card: ServerCard): Promise<ServerCard>;
   update(card: ServerCard): Promise<ServerCard>;

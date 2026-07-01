@@ -1,5 +1,5 @@
 import type { ServerCard } from '@ocr/core';
-import { desc, eq, isNull } from 'drizzle-orm';
+import { asc, desc, eq, gt, isNull } from 'drizzle-orm';
 import type { Db } from '../../db/client';
 import { cards } from '../../db/schema';
 import type { CardsRepository, ListCardsOptions } from './cards.repository';
@@ -16,6 +16,7 @@ function toRow(card: ServerCard): InsertRow {
     educationLevel: card.educationLevel ?? null,
     registrationNumber: card.registrationNumber ?? null,
     documentNumber: card.documentNumber ?? null,
+    cia: card.cia ?? null,
     issuer: card.issuer ?? null,
     birthDate: card.birthDate ?? null,
     validUntil: card.validUntil ?? null,
@@ -37,6 +38,7 @@ function toDomain(row: Row): ServerCard {
     ...(row.educationLevel != null ? { educationLevel: row.educationLevel } : {}),
     ...(row.registrationNumber != null ? { registrationNumber: row.registrationNumber } : {}),
     ...(row.documentNumber != null ? { documentNumber: row.documentNumber } : {}),
+    ...(row.cia != null ? { cia: row.cia } : {}),
     ...(row.issuer != null ? { issuer: row.issuer } : {}),
     ...(row.birthDate != null ? { birthDate: row.birthDate } : {}),
     ...(row.validUntil != null ? { validUntil: row.validUntil } : {}),
@@ -61,6 +63,15 @@ export class DrizzleCardsRepository implements CardsRepository {
       .orderBy(desc(cards.createdAt))
       .limit(options.limit)
       .offset(options.offset);
+    return rows.map(toDomain);
+  }
+
+  async listSince(since: string | null): Promise<ServerCard[]> {
+    const rows = await this.db
+      .select()
+      .from(cards)
+      .where(since ? gt(cards.updatedAt, new Date(since)) : undefined)
+      .orderBy(asc(cards.updatedAt));
     return rows.map(toDomain);
   }
 

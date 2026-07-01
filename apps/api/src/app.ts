@@ -7,6 +7,8 @@ import { registerSwagger } from './plugins/swagger';
 import type { CardsRepository } from './modules/cards/cards.repository';
 import { CardsService } from './modules/cards/cards.service';
 import { cardsRoutes } from './modules/cards/cards.routes';
+import { SyncService } from './modules/sync/sync.service';
+import { syncRoutes } from './modules/sync/sync.routes';
 
 export interface AppDeps {
   cardsRepository: CardsRepository;
@@ -35,6 +37,9 @@ export async function buildApp(deps: AppDeps) {
 
   const service = new CardsService(deps.cardsRepository);
   await app.register(cardsRoutes, { prefix: `/api/${API_VERSION}`, service });
+
+  const syncService = new SyncService(deps.cardsRepository);
+  await app.register(syncRoutes, { prefix: `/api/${API_VERSION}`, service: syncService });
 
   return app;
 }

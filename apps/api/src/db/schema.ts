@@ -22,6 +22,7 @@ export const cards = pgTable('cards', {
   educationLevel: educationLevelEnum('education_level'),
   registrationNumber: text('registration_number'),
   documentNumber: text('document_number'),
+  cia: text('cia'),
   issuer: text('issuer'),
   birthDate: date('birth_date', { mode: 'string' }),
   validUntil: date('valid_until', { mode: 'string' }),

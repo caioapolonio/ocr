@@ -14,6 +14,14 @@ export class InMemoryCardsRepository implements CardsRepository {
     return Promise.resolve(result);
   }
 
+  listSince(since: string | null): Promise<ServerCard[]> {
+    const result = [...this.store.values()]
+      .filter((card) => since === null || card.updatedAt > since)
+      .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt)) // mais antigas primeiro
+      .map((card) => ({ ...card }));
+    return Promise.resolve(result);
+  }
+
   findById(id: string): Promise<ServerCard | null> {
     const card = this.store.get(id);
     return Promise.resolve(card ? { ...card } : null);
