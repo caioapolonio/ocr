@@ -159,9 +159,9 @@ ocr/
 ## 13. Roadmap
 
 - **M0 — Fundação ✅:** monorepo, configs compartilhadas e `@ocr/core` (schemas + parser + testes).
-- **M1 — Backend MVP ✅ (atual):** Fastify + Postgres + Drizzle + REST `/cards` + Swagger + OpenAPI.
-- **M2 — Mobile base:** Expo + Router + Dev Client + expo-sqlite/Drizzle + telas com mock.
-- **M3 — OCR on-device:** câmera + ML Kit + parser do `core` + tela de revisão.
-- **M4 — Sync engine:** outbox + push/pull + LWW + triggers de conectividade.
-- **M5 — Auth & hardening:** JWT, multiusuário, rate-limit, testes e2e.
+- **M1 — Backend MVP ✅:** Fastify + Postgres + Drizzle + REST `/cards` + Swagger + OpenAPI.
+- **M2 — Mobile base ✅:** Expo + Router + Dev Client + expo-sqlite/Drizzle + telas com mock.
+- **M3 — OCR on-device ✅:** câmera + ML Kit + parser do `core` + tela de revisão (+ captura frente/verso e campo `cia`).
+- **M4 — Sync engine ✅:** outbox + push/pull + LWW + triggers (foreground/pull-to-refresh). REST `/sync/push` e `/sync/pull`.
+- **M5 — Auth & hardening (atual):** JWT, multiusuário, rate-limit, testes e2e.
 - **M6 — Polimento:** UI (NativeWind), EAS Build, CI (GitHub Actions + Turbo), docs.

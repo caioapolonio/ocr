@@ -13,10 +13,10 @@ export interface ListCardsOptions {
  * em memória nos testes (ver `cards.memory.ts`).
  */
 export interface CardsRepository {
-  list(options: ListCardsOptions): Promise<ServerCard[]>;
-  /** Todas as carteirinhas com `updatedAt > since` (inclui deletadas). Base do pull de sync. */
-  listSince(since: string | null): Promise<ServerCard[]>;
-  findById(id: string): Promise<ServerCard | null>;
-  create(card: ServerCard): Promise<ServerCard>;
-  update(card: ServerCard): Promise<ServerCard>;
+  list(userId: string, options: ListCardsOptions): Promise<ServerCard[]>;
+  /** Carteirinhas do usuário com `updatedAt > since` (inclui deletadas). Base do pull de sync. */
+  listSince(userId: string, since: string | null): Promise<ServerCard[]>;
+  findById(userId: string, id: string): Promise<ServerCard | null>;
+  create(userId: string, card: ServerCard): Promise<ServerCard>;
+  update(userId: string, card: ServerCard): Promise<ServerCard>;
 }

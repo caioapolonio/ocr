@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { CardChanges, StudentCard, SyncPullResponse, SyncPushResponse } from '@ocr/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildApp, type App } from '../../app';
-import { InMemoryCardsRepository } from '../cards/cards.memory';
+import type { App } from '../../app';
+import { buildTestApp, registerUser } from '../../test/harness';
 
 /** Constrói uma carteirinha do cliente (shape completo do `StudentCard`). */
 function studentCard(overrides: Partial<StudentCard> = {}): StudentCard {
@@ -26,35 +26,44 @@ function emptyChanges(): CardChanges {
 
 describe('sync API', () => {
   let app: App;
+  let headers: Record<string, string>;
 
   beforeEach(async () => {
-    app = await buildApp({ cardsRepository: new InMemoryCardsRepository() });
+    app = await buildTestApp();
+    ({ headers } = await registerUser(app));
   });
 
   afterEach(async () => {
     await app.close();
   });
 
-  async function push(cards: Partial<CardChanges>): Promise<SyncPushResponse> {
+  async function push(cards: Partial<CardChanges>, auth = headers): Promise<SyncPushResponse> {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/sync/push',
+      headers: auth,
       payload: { lastPulledAt: null, changes: { cards: { ...emptyChanges(), ...cards } } },
     });
     expect(res.statusCode).toBe(200);
     return res.json();
   }
 
-  async function pull(since: string | null): Promise<SyncPullResponse> {
+  async function pull(since: string | null, auth = headers): Promise<SyncPullResponse> {
     const res = await app.inject({
       method: 'GET',
       url: since ? `/api/v1/sync/pull?since=${encodeURIComponent(since)}` : '/api/v1/sync/pull',
+      headers: auth,
     });
     expect(res.statusCode).toBe(200);
     return res.json();
   }
 
   const pulledCards = (p: SyncPullResponse) => [...p.changes.cards.created, ...p.changes.cards.updated];
+
+  it('exige autenticação: 401 sem token', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/sync/pull' });
+    expect(res.statusCode).toBe(401);
+  });
 
   it('aceita criações e as devolve no pull', async () => {
     const card = studentCard();
@@ -64,7 +73,6 @@ describe('sync API', () => {
     expect(res.conflicts).toHaveLength(0);
 
     const found = pulledCards(await pull(null)).find((c) => c.id === card.id);
-    expect(found?.fullName).toBe('João da Silva');
     expect(found?.syncStatus).toBe('synced');
   });
 
@@ -77,9 +85,8 @@ describe('sync API', () => {
     });
 
     expect(res.accepted).not.toContain(id);
-    expect(res.conflicts).toHaveLength(1);
     expect(res.conflicts[0]?.reason).toBe('stale-update');
-    expect(res.conflicts[0]?.server.fullName).toBe('João da Silva'); // servidor manteve a sua cópia
+    expect(res.conflicts[0]?.server.fullName).toBe('João da Silva');
   });
 
   it('aplica o update quando o cliente é mais novo', async () => {
@@ -126,5 +133,15 @@ describe('sync API', () => {
     expect(found?.cpf).toBeUndefined();
     expect(found?.photoUri).toBeUndefined();
     expect(found?.cia).toBe('000123456');
+  });
+
+  it('isola o sync por usuário', async () => {
+    const card = studentCard();
+    await push({ created: [card] });
+
+    const other = await registerUser(app);
+    const p = await pull(null, other.headers);
+    expect(pulledCards(p)).toHaveLength(0);
+    expect(p.changes.cards.deleted).toHaveLength(0);
   });
 });

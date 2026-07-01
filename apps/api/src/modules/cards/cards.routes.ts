@@ -23,6 +23,8 @@ export interface CardsRoutesOptions {
 export const cardsRoutes: FastifyPluginAsyncZod<CardsRoutesOptions> = async (app, opts) => {
   const { service } = opts;
 
+  app.addHook('onRequest', app.authenticate);
+
   app.get(
     '/cards',
     {
@@ -33,7 +35,7 @@ export const cardsRoutes: FastifyPluginAsyncZod<CardsRoutesOptions> = async (app
         response: { 200: z.array(serverCardSchema) },
       },
     },
-    (request) => service.list(request.query),
+    (request) => service.list(request.user.sub, request.query),
   );
 
   app.get(
@@ -47,7 +49,7 @@ export const cardsRoutes: FastifyPluginAsyncZod<CardsRoutesOptions> = async (app
       },
     },
     async (request, reply) => {
-      const card = await service.get(request.params.id);
+      const card = await service.get(request.user.sub, request.params.id);
       if (!card) return reply.code(404).send({ message: 'Carteirinha não encontrada' });
       return card;
     },
@@ -64,7 +66,7 @@ export const cardsRoutes: FastifyPluginAsyncZod<CardsRoutesOptions> = async (app
       },
     },
     async (request, reply) => {
-      const card = await service.create(request.body);
+      const card = await service.create(request.user.sub, request.body);
       return reply.code(201).send(card);
     },
   );
@@ -81,7 +83,7 @@ export const cardsRoutes: FastifyPluginAsyncZod<CardsRoutesOptions> = async (app
       },
     },
     async (request, reply) => {
-      const card = await service.update(request.params.id, request.body);
+      const card = await service.update(request.user.sub, request.params.id, request.body);
       if (!card) return reply.code(404).send({ message: 'Carteirinha não encontrada' });
       return card;
     },
@@ -98,7 +100,7 @@ export const cardsRoutes: FastifyPluginAsyncZod<CardsRoutesOptions> = async (app
       },
     },
     async (request, reply) => {
-      const ok = await service.softDelete(request.params.id);
+      const ok = await service.softDelete(request.user.sub, request.params.id);
       if (!ok) return reply.code(404).send({ message: 'Carteirinha não encontrada' });
       return { success: true as const };
     },

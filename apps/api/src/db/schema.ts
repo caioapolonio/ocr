@@ -9,13 +9,25 @@ export const educationLevelEnum = pgEnum('education_level', [
   'outro',
 ]);
 
+/** Usuários (M5) — dono das carteirinhas; auth por e-mail + senha (hash). */
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 /**
  * Tabela `cards` — espelha o modelo do domínio (@ocr/core), porém **sem**
  * `cpf` e `photo_uri` (privacidade: não saem do dispositivo, ver specs.md §10)
  * e sem `syncStatus`/`serverId` (conceitos do cliente offline-first).
+ * Escopada por `user_id` (M5): cada usuário só vê as suas.
  */
 export const cards = pgTable('cards', {
   id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
   fullName: text('full_name').notNull(),
   institution: text('institution').notNull(),
   course: text('course'),

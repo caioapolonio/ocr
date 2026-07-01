@@ -53,29 +53,29 @@ function toStudentCard(card: ServerCard): StudentCard {
 export class SyncService {
   constructor(private readonly repo: CardsRepository) {}
 
-  async push(request: SyncPushRequest): Promise<SyncPushResponse> {
+  async push(userId: string, request: SyncPushRequest): Promise<SyncPushResponse> {
     const accepted: string[] = [];
     const conflicts: SyncConflict[] = [];
     const incoming = [...request.changes.cards.created, ...request.changes.cards.updated];
 
     for (const card of incoming) {
-      const existing = await this.repo.findById(card.id);
+      const existing = await this.repo.findById(userId, card.id);
       if (existing && existing.updatedAt > card.updatedAt) {
         // Servidor tem cópia mais nova → vence (LWW).
         conflicts.push({ id: card.id, reason: 'stale-update', server: toStudentCard(existing) });
         continue;
       }
       const mapped = toServerCard(card);
-      if (existing) await this.repo.update(mapped);
-      else await this.repo.create(mapped);
+      if (existing) await this.repo.update(userId, mapped);
+      else await this.repo.create(userId, mapped);
       accepted.push(card.id);
     }
 
     for (const id of request.changes.cards.deleted) {
-      const existing = await this.repo.findById(id);
+      const existing = await this.repo.findById(userId, id);
       if (existing && !existing.deletedAt) {
         const now = new Date().toISOString();
-        await this.repo.update({
+        await this.repo.update(userId, {
           ...existing,
           version: existing.version + 1,
           updatedAt: now,
@@ -88,8 +88,8 @@ export class SyncService {
     return { accepted, conflicts, serverTime: new Date().toISOString() };
   }
 
-  async pull(since: string | null): Promise<SyncPullResponse> {
-    const changed = await this.repo.listSince(since);
+  async pull(userId: string, since: string | null): Promise<SyncPullResponse> {
+    const changed = await this.repo.listSince(userId, since);
     const created: StudentCard[] = [];
     const updated: StudentCard[] = [];
     const deleted: string[] = [];

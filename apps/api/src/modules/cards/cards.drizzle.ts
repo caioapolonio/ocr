@@ -1,5 +1,5 @@
 import type { ServerCard } from '@ocr/core';
-import { asc, desc, eq, gt, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNull } from 'drizzle-orm';
 import type { Db } from '../../db/client';
 import { cards } from '../../db/schema';
 import type { CardsRepository, ListCardsOptions } from './cards.repository';
@@ -7,9 +7,10 @@ import type { CardsRepository, ListCardsOptions } from './cards.repository';
 type Row = typeof cards.$inferSelect;
 type InsertRow = typeof cards.$inferInsert;
 
-function toRow(card: ServerCard): InsertRow {
+function toRow(userId: string, card: ServerCard): InsertRow {
   return {
     id: card.id,
+    userId,
     fullName: card.fullName,
     institution: card.institution,
     course: card.course ?? null,
@@ -51,43 +52,52 @@ function toDomain(row: Row): ServerCard {
   };
 }
 
-/** Repositório de carteirinhas sobre Postgres (Drizzle). */
+/** Repositório de carteirinhas sobre Postgres (Drizzle), escopado por usuário. */
 export class DrizzleCardsRepository implements CardsRepository {
   constructor(private readonly db: Db) {}
 
-  async list(options: ListCardsOptions): Promise<ServerCard[]> {
+  async list(userId: string, options: ListCardsOptions): Promise<ServerCard[]> {
+    const scope = eq(cards.userId, userId);
     const rows = await this.db
       .select()
       .from(cards)
-      .where(options.includeDeleted ? undefined : isNull(cards.deletedAt))
+      .where(options.includeDeleted ? scope : and(scope, isNull(cards.deletedAt)))
       .orderBy(desc(cards.createdAt))
       .limit(options.limit)
       .offset(options.offset);
     return rows.map(toDomain);
   }
 
-  async listSince(since: string | null): Promise<ServerCard[]> {
+  async listSince(userId: string, since: string | null): Promise<ServerCard[]> {
+    const scope = eq(cards.userId, userId);
     const rows = await this.db
       .select()
       .from(cards)
-      .where(since ? gt(cards.updatedAt, new Date(since)) : undefined)
+      .where(since ? and(scope, gt(cards.updatedAt, new Date(since))) : scope)
       .orderBy(asc(cards.updatedAt));
     return rows.map(toDomain);
   }
 
-  async findById(id: string): Promise<ServerCard | null> {
-    const [row] = await this.db.select().from(cards).where(eq(cards.id, id)).limit(1);
+  async findById(userId: string, id: string): Promise<ServerCard | null> {
+    const [row] = await this.db
+      .select()
+      .from(cards)
+      .where(and(eq(cards.id, id), eq(cards.userId, userId)))
+      .limit(1);
     return row ? toDomain(row) : null;
   }
 
-  async create(card: ServerCard): Promise<ServerCard> {
-    await this.db.insert(cards).values(toRow(card));
+  async create(userId: string, card: ServerCard): Promise<ServerCard> {
+    await this.db.insert(cards).values(toRow(userId, card));
     return card;
   }
 
-  async update(card: ServerCard): Promise<ServerCard> {
-    const { id: _id, createdAt: _createdAt, ...mutable } = toRow(card);
-    await this.db.update(cards).set(mutable).where(eq(cards.id, card.id));
+  async update(userId: string, card: ServerCard): Promise<ServerCard> {
+    const { id: _id, userId: _userId, createdAt: _createdAt, ...mutable } = toRow(userId, card);
+    await this.db
+      .update(cards)
+      .set(mutable)
+      .where(and(eq(cards.id, card.id), eq(cards.userId, userId)));
     return card;
   }
 }

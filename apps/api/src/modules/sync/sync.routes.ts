@@ -14,6 +14,8 @@ export interface SyncRoutesOptions {
 export const syncRoutes: FastifyPluginAsyncZod<SyncRoutesOptions> = async (app, opts) => {
   const { service } = opts;
 
+  app.addHook('onRequest', app.authenticate);
+
   app.post(
     '/sync/push',
     {
@@ -24,7 +26,7 @@ export const syncRoutes: FastifyPluginAsyncZod<SyncRoutesOptions> = async (app, 
         response: { 200: syncPushResponseSchema },
       },
     },
-    (request) => service.push(request.body),
+    (request) => service.push(request.user.sub, request.body),
   );
 
   app.get(
@@ -37,6 +39,6 @@ export const syncRoutes: FastifyPluginAsyncZod<SyncRoutesOptions> = async (app, 
         response: { 200: syncPullResponseSchema },
       },
     },
-    (request) => service.pull(request.query.since ?? null),
+    (request) => service.pull(request.user.sub, request.query.since ?? null),
   );
 };
