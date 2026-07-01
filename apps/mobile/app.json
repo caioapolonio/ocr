@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.caioapolonio.carteirinhaocr",
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.caioapolonio.carteirinhaocr",
@@ -19,7 +22,11 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -40,8 +47,16 @@
       "expo-sqlite",
       [
         "expo-camera",
-        { "cameraPermission": "Permite ler sua carteirinha de estudante pela câmera." }
+        {
+          "cameraPermission": "Permite ler sua carteirinha de estudante pela câmera."
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "adc7bee3-c84e-48d7-be67-af4190b2a222"
+      }
+    }
   }
 }
