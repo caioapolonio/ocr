@@ -2,7 +2,18 @@ import type { ParsedStudentCard } from '@ocr/core';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'expo-crypto';
 import { db } from '@/db/client';
-import { cards, type NewCardRow } from '@/db/schema';
+import { cards, outbox, type NewCardRow } from '@/db/schema';
+
+/** Enfileira uma mutação no outbox para o motor de sync (M4). */
+async function enqueue(op: 'create' | 'update' | 'delete', entityId: string): Promise<void> {
+  await db.insert(outbox).values({
+    id: randomUUID(),
+    entity: 'card',
+    op,
+    entityId,
+    createdAt: new Date().toISOString(),
+  });
+}
 
 /** Campos de conteúdo de uma carteirinha (sem id/version/sync/timestamps). */
 export type CardContent = Pick<
@@ -58,6 +69,7 @@ export async function createCard(content: CardContent): Promise<string> {
     createdAt: now,
     updatedAt: now,
   });
+  await enqueue('create', id);
   return id;
 }
 
@@ -66,6 +78,7 @@ export async function updateCard(id: string, content: Partial<CardContent>): Pro
     .update(cards)
     .set({ ...content, syncStatus: 'pending', updatedAt: new Date().toISOString() })
     .where(eq(cards.id, id));
+  await enqueue('update', id);
 }
 
 /** Soft-delete (marca deletedAt; a remoção real propaga no sync — M4). */
@@ -75,4 +88,5 @@ export async function softDeleteCard(id: string): Promise<void> {
     .update(cards)
     .set({ deletedAt: now, syncStatus: 'pending', updatedAt: now })
     .where(eq(cards.id, id));
+  await enqueue('delete', id);
 }

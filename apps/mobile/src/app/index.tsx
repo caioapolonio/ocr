@@ -1,22 +1,65 @@
 import { desc, isNull } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Link, useRouter } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { db } from '@/db/client';
 import { cards } from '@/db/schema';
+import { useSync } from '@/features/sync/useSync';
 
 export default function CardsListScreen() {
   const router = useRouter();
   const { data } = useLiveQuery(
     db.select().from(cards).where(isNull(cards.deletedAt)).orderBy(desc(cards.createdAt)),
   );
+  const { status, error, lastResult, syncNow } = useSync();
+
+  function syncLabel(): string {
+    switch (status) {
+      case 'disabled':
+        return 'Sync off — defina EXPO_PUBLIC_API_URL';
+      case 'syncing':
+        return 'Sincronizando…';
+      case 'error':
+        return `Erro no sync: ${error ?? ''}`;
+      case 'ok':
+        return lastResult?.skipped
+          ? lastResult.skipped
+          : `Sincronizado · ↑${lastResult?.pushed ?? 0} ↓${lastResult?.pulled ?? 0}` +
+              (lastResult?.conflicts ? ` · ⚠${lastResult.conflicts}` : '');
+      default:
+        return 'Toque para sincronizar';
+    }
+  }
 
   return (
     <View style={styles.container}>
+      <Pressable
+        style={styles.syncBar}
+        onPress={syncNow}
+        disabled={status === 'syncing' || status === 'disabled'}
+      >
+        <Text style={styles.syncBarText}>{syncLabel()}</Text>
+        {status === 'syncing' ? <ActivityIndicator size="small" color="#208AEF" /> : null}
+      </Pressable>
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={status === 'syncing'}
+            onRefresh={syncNow}
+            tintColor="#208AEF"
+          />
+        }
         ListEmptyComponent={
           <Text style={styles.empty}>
             Nenhuma carteirinha ainda.{'\n'}Toque em “📷 Escanear”.
@@ -52,6 +95,17 @@ export default function CardsListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
+  syncBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    backgroundColor: '#eff6ff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#dbeafe',
+  },
+  syncBarText: { color: '#1d4ed8', fontWeight: '600', fontSize: 13 },
   listContent: { padding: 16, gap: 12, flexGrow: 1 },
   empty: { textAlign: 'center', color: '#6b7280', marginTop: 64, lineHeight: 22 },
   card: {

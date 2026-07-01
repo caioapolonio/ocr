@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { db } from '@/db/client';
 import migrations from '@/db/migrations';
+import { SyncProvider } from '@/features/sync/useSync';
 
 export default function RootLayout() {
   const { success, error } = useMigrations(db, migrations);
@@ -26,12 +27,14 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerTintColor: '#208AEF' }}>
-      <Stack.Screen name="index" options={{ title: 'Carteirinhas' }} />
-      <Stack.Screen name="camera" options={{ title: 'Escanear', presentation: 'modal' }} />
-      <Stack.Screen name="scan" options={{ title: 'Simular OCR', presentation: 'modal' }} />
-      <Stack.Screen name="card/[id]" options={{ title: 'Carteirinha' }} />
-    </Stack>
+    <SyncProvider>
+      <Stack screenOptions={{ headerTintColor: '#208AEF' }}>
+        <Stack.Screen name="index" options={{ title: 'Carteirinhas' }} />
+        <Stack.Screen name="camera" options={{ title: 'Escanear', presentation: 'modal' }} />
+        <Stack.Screen name="scan" options={{ title: 'Simular OCR', presentation: 'modal' }} />
+        <Stack.Screen name="card/[id]" options={{ title: 'Carteirinha' }} />
+      </Stack>
+    </SyncProvider>
   );
 }
 
