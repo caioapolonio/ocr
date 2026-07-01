@@ -2,6 +2,7 @@ import type { StudentCard, SyncPushRequest } from '@ocr/core';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { cards, outbox, syncMeta, type CardRow } from '@/db/schema';
+import { getAuth } from '@/features/auth/storage';
 import { pullChanges, pushChanges } from './api';
 import { SYNC_ENABLED } from './config';
 
@@ -111,6 +112,9 @@ export async function runSync(): Promise<SyncResult> {
     return { pushed: 0, pulled: 0, conflicts: 0, skipped: 'EXPO_PUBLIC_API_URL não configurada' };
   }
 
+  const auth = await getAuth();
+  if (!auth) return { pushed: 0, pulled: 0, conflicts: 0, skipped: 'Entre para sincronizar' };
+
   // ---- PUSH: coalesce a outbox por carteirinha (última operação vence) ----
   const entries = await db.select().from(outbox).orderBy(outbox.createdAt);
   const opByCard = new Map<string, string>();
@@ -140,7 +144,7 @@ export async function runSync(): Promise<SyncResult> {
       lastPulledAt,
       changes: { cards: { created, updated, deleted } },
     };
-    const res = await pushChanges(request);
+    const res = await pushChanges(request, auth.token);
     pushed = res.accepted.length;
 
     if (res.accepted.length) {
@@ -155,7 +159,7 @@ export async function runSync(): Promise<SyncResult> {
   }
 
   // ---- PULL: aplica as mudanças do servidor desde o último sync ----
-  const pull = await pullChanges(lastPulledAt);
+  const pull = await pullChanges(lastPulledAt, auth.token);
   let pulled = 0;
   for (const card of [...pull.changes.cards.created, ...pull.changes.cards.updated]) {
     if (await applyServerCard(card, 'synced')) pulled += 1;

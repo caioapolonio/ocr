@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { db } from '@/db/client';
 import { cards } from '@/db/schema';
+import { useAuth } from '@/features/auth/useAuth';
 import { useSync } from '@/features/sync/useSync';
 
 export default function CardsListScreen() {
@@ -20,6 +21,7 @@ export default function CardsListScreen() {
     db.select().from(cards).where(isNull(cards.deletedAt)).orderBy(desc(cards.createdAt)),
   );
   const { status, error, lastResult, syncNow } = useSync();
+  const { email, token, signOut } = useAuth();
 
   function syncLabel(): string {
     switch (status) {
@@ -41,14 +43,23 @@ export default function CardsListScreen() {
 
   return (
     <View style={styles.container}>
-      <Pressable
-        style={styles.syncBar}
-        onPress={syncNow}
-        disabled={status === 'syncing' || status === 'disabled'}
-      >
-        <Text style={styles.syncBarText}>{syncLabel()}</Text>
-        {status === 'syncing' ? <ActivityIndicator size="small" color="#208AEF" /> : null}
-      </Pressable>
+      {token ? (
+        <View style={styles.syncBarRow}>
+          <Pressable style={styles.syncBarMain} onPress={syncNow} disabled={status === 'syncing'}>
+            <Text style={styles.syncBarText} numberOfLines={1}>
+              {email} · {syncLabel()}
+            </Text>
+            {status === 'syncing' ? <ActivityIndicator size="small" color="#208AEF" /> : null}
+          </Pressable>
+          <Pressable onPress={signOut} hitSlop={8}>
+            <Text style={styles.syncBarAction}>Sair</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable style={styles.syncBar} onPress={() => router.push('/login')}>
+          <Text style={styles.syncBarText}>Entrar para sincronizar ›</Text>
+        </Pressable>
+      )}
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
@@ -56,7 +67,7 @@ export default function CardsListScreen() {
         refreshControl={
           <RefreshControl
             refreshing={status === 'syncing'}
-            onRefresh={syncNow}
+            onRefresh={token ? syncNow : () => router.push('/login')}
             tintColor="#208AEF"
           />
         }
@@ -105,7 +116,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#dbeafe',
   },
+  syncBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#eff6ff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#dbeafe',
+  },
+  syncBarMain: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   syncBarText: { color: '#1d4ed8', fontWeight: '600', fontSize: 13 },
+  syncBarAction: { color: '#dc2626', fontWeight: '600', fontSize: 13 },
   listContent: { padding: 16, gap: 12, flexGrow: 1 },
   empty: { textAlign: 'center', color: '#6b7280', marginTop: 64, lineHeight: 22 },
   card: {

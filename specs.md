@@ -163,5 +163,5 @@ ocr/
 - **M2 — Mobile base ✅:** Expo + Router + Dev Client + expo-sqlite/Drizzle + telas com mock.
 - **M3 — OCR on-device ✅:** câmera + ML Kit + parser do `core` + tela de revisão (+ captura frente/verso e campo `cia`).
 - **M4 — Sync engine ✅:** outbox + push/pull + LWW + triggers (foreground/pull-to-refresh). REST `/sync/push` e `/sync/pull`.
-- **M5 — Auth & hardening (atual):** JWT, multiusuário, rate-limit, testes e2e.
-- **M6 — Polimento:** UI (NativeWind), EAS Build, CI (GitHub Actions + Turbo), docs.
+- **M5 — Auth & hardening ✅:** JWT (e-mail+senha), multiusuário (escopo por `user_id`), rate-limit, testes e2e.
+- **M6 — Polimento (atual):** UI (NativeWind), EAS Build, CI (GitHub Actions + Turbo), docs.
