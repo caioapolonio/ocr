@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { cards, outbox, syncMeta } from '@/db/schema';
 
@@ -35,9 +35,12 @@ export async function setAuth(auth: StoredAuth): Promise<void> {
  * no mesmo aparelho enviaria as carteirinhas da conta anterior para a sua.
  */
 export async function clearLocalData(): Promise<void> {
-  await db.delete(outbox);
-  await db.delete(cards);
-  await db.delete(syncMeta);
+  // Com WHERE de propósito: um DELETE sem WHERE usa a "truncate optimization"
+  // do SQLite, que não avisa o change listener, e a lista (useLiveQuery)
+  // continuaria mostrando as carteirinhas apagadas.
+  await db.delete(outbox).where(isNotNull(outbox.id));
+  await db.delete(cards).where(isNotNull(cards.id));
+  await db.delete(syncMeta).where(isNotNull(syncMeta.key));
 }
 
 /** Carteirinhas com mudanças que ainda não chegaram ao servidor. */
