@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { createCard, type CardContent } from './mutations';
+import { contentProblem } from './validate';
 
 /** Formulário de revisão dos campos extraídos (reusado pela câmera e pelo mock). */
 export function CardReviewForm(props: { initial: CardContent; confidence: number }) {
@@ -14,8 +15,9 @@ export function CardReviewForm(props: { initial: CardContent; confidence: number
   }
 
   async function save() {
-    if (!form.fullName.trim() || !form.institution.trim()) {
-      Alert.alert('Campos obrigatórios', 'Preencha pelo menos nome e instituição.');
+    const problem = contentProblem(form);
+    if (problem) {
+      Alert.alert('Confira os dados', problem);
       return;
     }
     setSaving(true);

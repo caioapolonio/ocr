@@ -1,4 +1,4 @@
-import type { StudentCard, SyncPushRequest } from '@ocr/core';
+import { redactCpf, studentCardSchema, type StudentCard, type SyncPushRequest } from '@ocr/core';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { cards, outbox, syncMeta, type CardRow } from '@/db/schema';
@@ -10,27 +10,35 @@ export interface SyncResult {
   pushed: number;
   pulled: number;
   conflicts: number;
+  /** Carteirinhas com dados inválidos que ficaram na outbox até serem corrigidas. */
+  invalid?: number;
   skipped?: string;
 }
 
+/** Campo opcional preenchido? (`''` de um input apagado conta como ausente.) */
+function filled<T>(value: T | null | undefined): value is T {
+  return value != null && (typeof value !== 'string' || value.trim() !== '');
+}
+
 /**
- * Converte a linha local em `StudentCard` para o push. Omite nulos e,
- * por privacidade (specs §10), **não envia `cpf` nem `photoUri`**.
+ * Converte a linha local em `StudentCard` para o push. Omite campos vazios e,
+ * por privacidade (specs §10), **não envia `cpf` nem `photoUri`** e tira o CPF
+ * de dentro do `rawOcrText`.
  */
 function rowToStudentCard(row: CardRow): StudentCard {
   return {
     id: row.id,
     fullName: row.fullName,
     institution: row.institution,
-    ...(row.course != null ? { course: row.course } : {}),
-    ...(row.educationLevel != null ? { educationLevel: row.educationLevel } : {}),
-    ...(row.registrationNumber != null ? { registrationNumber: row.registrationNumber } : {}),
-    ...(row.documentNumber != null ? { documentNumber: row.documentNumber } : {}),
-    ...(row.cia != null ? { cia: row.cia } : {}),
-    ...(row.issuer != null ? { issuer: row.issuer } : {}),
-    ...(row.birthDate != null ? { birthDate: row.birthDate } : {}),
-    ...(row.validUntil != null ? { validUntil: row.validUntil } : {}),
-    rawOcrText: row.rawOcrText,
+    ...(filled(row.course) ? { course: row.course } : {}),
+    ...(filled(row.educationLevel) ? { educationLevel: row.educationLevel } : {}),
+    ...(filled(row.registrationNumber) ? { registrationNumber: row.registrationNumber } : {}),
+    ...(filled(row.documentNumber) ? { documentNumber: row.documentNumber } : {}),
+    ...(filled(row.cia) ? { cia: row.cia } : {}),
+    ...(filled(row.issuer) ? { issuer: row.issuer } : {}),
+    ...(filled(row.birthDate) ? { birthDate: row.birthDate } : {}),
+    ...(filled(row.validUntil) ? { validUntil: row.validUntil } : {}),
+    rawOcrText: redactCpf(row.rawOcrText),
     ...(row.ocrConfidence != null ? { ocrConfidence: row.ocrConfidence } : {}),
     version: row.version,
     syncStatus: row.syncStatus,
@@ -123,6 +131,7 @@ export async function runSync(): Promise<SyncResult> {
   const created: StudentCard[] = [];
   const updated: StudentCard[] = [];
   const deleted: string[] = [];
+  let invalid = 0;
   for (const [id, op] of opByCard) {
     if (op === 'delete') {
       deleted.push(id);
@@ -130,9 +139,16 @@ export async function runSync(): Promise<SyncResult> {
     }
     const row = await findCard(id);
     if (!row) continue;
-    if (row.deletedAt) deleted.push(id);
-    else if (row.version === 0) created.push(rowToStudentCard(row));
-    else updated.push(rowToStudentCard(row));
+    if (row.deletedAt) {
+      deleted.push(id);
+      continue;
+    }
+    // Uma carteirinha inválida (ex.: validade fora do formato) não pode
+    // derrubar o push das outras: fica na outbox até ser corrigida.
+    const card = studentCardSchema.safeParse(rowToStudentCard(row));
+    if (!card.success) invalid += 1;
+    else if (row.version === 0) created.push(card.data);
+    else updated.push(card.data);
   }
 
   const lastPulledAt = await getLastPulledAt();
@@ -177,5 +193,5 @@ export async function runSync(): Promise<SyncResult> {
   }
   await setLastPulledAt(pull.serverTime);
 
-  return { pushed, pulled, conflicts };
+  return { pushed, pulled, conflicts, ...(invalid ? { invalid } : {}) };
 }

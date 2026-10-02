@@ -24,8 +24,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -48,7 +47,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Permite ler sua carteirinha de estudante pela câmera."
+          "cameraPermission": "Permite ler sua carteirinha de estudante pela câmera.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ]
     ],

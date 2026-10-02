@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { syncMeta } from '@/db/schema';
+import { cards, outbox, syncMeta } from '@/db/schema';
 
 // Guardamos o token na tabela local `sync_meta`.
 // TODO(hardening): migrar para expo-secure-store (Keychain/Keystore) — exige rebuild nativo.
@@ -29,6 +29,19 @@ export async function setAuth(auth: StoredAuth): Promise<void> {
     .onConflictDoUpdate({ target: syncMeta.key, set: { value } });
 }
 
-export async function clearAuth(): Promise<void> {
-  await db.delete(syncMeta).where(eq(syncMeta.key, AUTH_KEY));
+/**
+ * Sair apaga tudo o que é da conta neste aparelho: carteirinhas, outbox e
+ * metadados do sync (token e `lastPulledAt`). Sem isso, quem entrasse depois
+ * no mesmo aparelho enviaria as carteirinhas da conta anterior para a sua.
+ */
+export async function clearLocalData(): Promise<void> {
+  await db.delete(outbox);
+  await db.delete(cards);
+  await db.delete(syncMeta);
+}
+
+/** Carteirinhas com mudanças que ainda não chegaram ao servidor. */
+export async function unsyncedCount(): Promise<number> {
+  const entries = await db.select({ entityId: outbox.entityId }).from(outbox);
+  return new Set(entries.map(({ entityId }) => entityId)).size;
 }

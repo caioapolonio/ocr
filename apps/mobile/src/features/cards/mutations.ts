@@ -34,6 +34,23 @@ export type CardContent = Pick<
   | 'ocrConfidence'
 >;
 
+// O texto bruto é guardado como veio do OCR (auditoria/re-parse)
+const VERBATIM_FIELDS = new Set(['rawOcrText']);
+
+/**
+ * Tira espaços das pontas e grava campo opcional apagado como `null`: um `''`
+ * não passa nos schemas do sync e travaria o envio da carteirinha.
+ */
+function normalize<T extends Partial<CardContent>>(content: T): T {
+  return Object.fromEntries(
+    Object.entries(content).map(([key, value]) => {
+      if (typeof value !== 'string' || VERBATIM_FIELDS.has(key)) return [key, value];
+      const trimmed = value.trim();
+      return [key, trimmed || (key === 'fullName' || key === 'institution' ? '' : null)];
+    }),
+  ) as T;
+}
+
 /** Converte a saída do parser (@ocr/core) em conteúdo pronto p/ persistir. */
 export function parsedToContent(
   parsed: ParsedStudentCard,
@@ -62,7 +79,7 @@ export async function createCard(content: CardContent): Promise<string> {
   const id = randomUUID();
   const now = new Date().toISOString();
   await db.insert(cards).values({
-    ...content,
+    ...normalize(content),
     id,
     version: 0,
     syncStatus: 'pending',
@@ -76,7 +93,7 @@ export async function createCard(content: CardContent): Promise<string> {
 export async function updateCard(id: string, content: Partial<CardContent>): Promise<void> {
   await db
     .update(cards)
-    .set({ ...content, syncStatus: 'pending', updatedAt: new Date().toISOString() })
+    .set({ ...normalize(content), syncStatus: 'pending', updatedAt: new Date().toISOString() })
     .where(eq(cards.id, id));
   await enqueue('update', id);
 }

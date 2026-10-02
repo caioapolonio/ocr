@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { CardReviewForm } from '@/features/cards/CardReviewForm';
 import { parsedToContent, type CardContent } from '@/features/cards/mutations';
-import { recognizeCards } from '@/features/ocr/recognize';
+import { discardPhoto, recognizeCards } from '@/features/ocr/recognize';
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -52,6 +52,7 @@ export default function CameraScreen() {
   }
 
   function reset() {
+    if (frontUri) discardPhoto(frontUri);
     setParsed(null);
     setFrontUri(null);
     setStep('front');

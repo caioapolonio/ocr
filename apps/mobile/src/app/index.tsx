@@ -3,6 +3,7 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Link, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -12,6 +13,7 @@ import {
 } from 'react-native';
 import { db } from '@/db/client';
 import { cards } from '@/db/schema';
+import { unsyncedCount } from '@/features/auth/storage';
 import { useAuth } from '@/features/auth/useAuth';
 import { useSync } from '@/features/sync/useSync';
 
@@ -22,6 +24,17 @@ export default function CardsListScreen() {
   );
   const { status, error, lastResult, syncNow } = useSync();
   const { email, token, signOut } = useAuth();
+
+  async function confirmSignOut() {
+    const pending = await unsyncedCount();
+    const message = pending
+      ? `${pending} carteirinha(s) ainda não sincronizada(s) serão perdidas. Sair apaga os dados deste aparelho.`
+      : 'Sair apaga as carteirinhas deste aparelho. Elas continuam salvas na sua conta.';
+    Alert.alert('Sair da conta', message, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: () => void signOut() },
+    ]);
+  }
 
   function syncLabel(): string {
     switch (status) {
@@ -35,7 +48,8 @@ export default function CardsListScreen() {
         return lastResult?.skipped
           ? lastResult.skipped
           : `Sincronizado · ↑${lastResult?.pushed ?? 0} ↓${lastResult?.pulled ?? 0}` +
-              (lastResult?.conflicts ? ` · ⚠${lastResult.conflicts}` : '');
+              (lastResult?.conflicts ? ` · ⚠${lastResult.conflicts}` : '') +
+              (lastResult?.invalid ? ` · ${lastResult.invalid} com dados a corrigir` : '');
       default:
         return 'Toque para sincronizar';
     }
@@ -51,7 +65,7 @@ export default function CardsListScreen() {
             </Text>
             {status === 'syncing' ? <ActivityIndicator size="small" color="#208AEF" /> : null}
           </Pressable>
-          <Pressable onPress={signOut} hitSlop={8}>
+          <Pressable onPress={confirmSignOut} hitSlop={8}>
             <Text style={styles.syncBarAction}>Sair</Text>
           </Pressable>
         </View>

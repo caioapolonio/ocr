@@ -6,6 +6,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { db } from '@/db/client';
 import { cards } from '@/db/schema';
 import { softDeleteCard, updateCard } from '@/features/cards/mutations';
+import { contentProblem } from '@/features/cards/validate';
 
 export default function CardDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -36,21 +37,17 @@ export default function CardDetailScreen() {
   }
 
   async function saveEdit() {
-    if (!draft.fullName.trim() || !draft.institution.trim()) {
-      Alert.alert('Campos obrigatórios', 'Nome e instituição são obrigatórios.');
+    const problem = contentProblem(draft);
+    if (problem) {
+      Alert.alert('Confira os dados', problem);
       return;
     }
-    await updateCard(id, {
-      fullName: draft.fullName,
-      institution: draft.institution,
-      course: draft.course || null,
-      validUntil: draft.validUntil || null,
-    });
+    await updateCard(id, draft);
     setEditing(false);
   }
 
   function confirmDelete() {
-    Alert.alert('Excluir carteirinha', 'Tem certeza? Esta ação pode ser desfeita no sync (M4).', [
+    Alert.alert('Excluir carteirinha', 'Tem certeza? A exclusão vale também para os outros aparelhos da conta.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',
@@ -82,7 +79,7 @@ export default function CardDetailScreen() {
           onChangeText={(t) => setDraft((d) => ({ ...d, course: t }))}
         />
         <LabeledInput
-          label="Validade"
+          label="Validade (AAAA-MM-DD)"
           value={draft.validUntil}
           onChangeText={(t) => setDraft((d) => ({ ...d, validUntil: t }))}
         />

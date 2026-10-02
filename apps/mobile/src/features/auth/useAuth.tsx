@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { login as apiLogin, register as apiRegister } from './api';
-import { clearAuth, getAuth, setAuth } from './storage';
+import { clearLocalData, getAuth, setAuth } from './storage';
 
 interface AuthContextValue {
   email: string | null;
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [apply],
   );
   const signOut = useCallback(async () => {
-    await clearAuth();
+    await clearLocalData();
     setEmail(null);
     setToken(null);
   }, []);
