@@ -1,7 +1,7 @@
 # Carteirinha OCR — Especificação (Single Source of Truth)
 
 > Documento vivo. Toda decisão de produto/arquitetura nasce ou é registrada aqui.
-> Última atualização: 2026-06-26.
+> Última atualização: 2026-10-03.
 
 ## 1. Visão Geral
 
@@ -21,7 +21,7 @@ estudo** (código claro, camadas explícitas e testável).
 
 **Não-objetivos (v1)**
 - Validar a autenticidade da carteirinha junto a órgãos emissores.
-- Login social / multiusuário (planejado para o M5).
+- Login social (a conta é por e-mail e senha, desde o M5).
 - OCR em tempo real (live scan).
 
 ## 3. Personas & Histórias de Usuário
@@ -132,7 +132,12 @@ instituição (universidade/faculdade/instituto/etec…), rótulos "Matrícula/R
 ## 10. Privacidade & Segurança (LGPD-aware)
 
 - OCR **on-device** → a **imagem nunca sai do aparelho** por padrão; `photoUri` é local-only.
-- **CPF** é opcional e **não sincroniza** por padrão.
+- **CPF** é opcional e **não sincroniza** por padrão — nem dentro do `rawOcrText`: o texto bruto
+  sai do aparelho com o CPF trocado por `[CPF removido]` (`redactCpf` em `@ocr/core`), e a API
+  aplica a mesma limpeza ao gravar.
+- As fotos da câmera só servem para o OCR: são **apagadas do cache** logo depois da leitura.
+- **Sair da conta apaga os dados locais** (carteirinhas, outbox e metadados do sync), para que a
+  próxima conta no mesmo aparelho não herde nem envie as carteirinhas da anterior.
 - O backend recebe apenas os **dados estruturados mínimos**.
 - Comunicação via HTTPS; segredos fora do repositório (`.env`, exemplos em `.env.example`).
 - Fixtures/testes usam apenas dados **sintéticos e anonimizados**.
