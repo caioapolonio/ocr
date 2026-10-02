@@ -1,17 +1,19 @@
-import type {
-  ServerCard,
-  StudentCard,
-  SyncConflict,
-  SyncPullResponse,
-  SyncPushRequest,
-  SyncPushResponse,
+import {
+  redactCpf,
+  type ServerCard,
+  type StudentCard,
+  type SyncConflict,
+  type SyncPullResponse,
+  type SyncPushRequest,
+  type SyncPushResponse,
 } from '@ocr/core';
 import type { CardsRepository } from '../cards/cards.repository';
 
 /**
  * Converte a carteirinha do cliente (`StudentCard`) no shape do servidor,
  * descartando os campos que **não** sincronizam por privacidade (`cpf`,
- * `photoUri`) nem os metadados locais (`syncStatus`, `serverId`). Ver specs §10.
+ * `photoUri`) nem os metadados locais (`syncStatus`, `serverId`), e tirando o
+ * CPF de dentro do `rawOcrText`. Ver specs §10.
  */
 function toServerCard(card: StudentCard): ServerCard {
   return {
@@ -26,7 +28,7 @@ function toServerCard(card: StudentCard): ServerCard {
     ...(card.issuer != null ? { issuer: card.issuer } : {}),
     ...(card.birthDate != null ? { birthDate: card.birthDate } : {}),
     ...(card.validUntil != null ? { validUntil: card.validUntil } : {}),
-    rawOcrText: card.rawOcrText,
+    rawOcrText: redactCpf(card.rawOcrText),
     ...(card.ocrConfidence != null ? { ocrConfidence: card.ocrConfidence } : {}),
     version: card.version,
     createdAt: card.createdAt,

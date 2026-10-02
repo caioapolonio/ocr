@@ -135,6 +135,16 @@ describe('sync API', () => {
     expect(found?.cia).toBe('000123456');
   });
 
+  it('tira o CPF de dentro do rawOcrText antes de guardar', async () => {
+    const id = randomUUID();
+    await push({
+      created: [studentCard({ id, rawOcrText: 'Nome: João da Silva\nCPF: 123.456.789-00' })],
+    });
+
+    const found = pulledCards(await pull(null)).find((c) => c.id === id);
+    expect(found?.rawOcrText).toBe('Nome: João da Silva\nCPF: [CPF removido]');
+  });
+
   it('isola o sync por usuário', async () => {
     const card = studentCard();
     await push({ created: [card] });

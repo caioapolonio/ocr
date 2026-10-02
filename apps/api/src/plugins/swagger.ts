@@ -9,11 +9,13 @@ export async function registerSwagger<T extends FastifyInstance>(app: T): Promis
     openapi: {
       info: {
         title: 'Carteirinha OCR API',
-        description: 'API REST de carteirinhas de estudante (M1).',
+        description: 'API REST de carteirinhas de estudante: contas, CRUD e sincronização offline-first.',
         version: '1.0.0',
       },
       tags: [
+        { name: 'auth', description: 'Cadastro e login (JWT)' },
         { name: 'cards', description: 'CRUD de carteirinhas' },
+        { name: 'sync', description: 'Push/pull do app offline-first (Last-Write-Wins)' },
         { name: 'health', description: 'Status do serviço' },
       ],
     },

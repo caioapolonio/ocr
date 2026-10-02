@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { CreateServerCard, ServerCard, UpdateServerCard } from '@ocr/core';
+import { redactCpf, type CreateServerCard, type ServerCard, type UpdateServerCard } from '@ocr/core';
 import type { CardsRepository, ListCardsOptions } from './cards.repository';
 
 /**
@@ -24,6 +24,8 @@ export class CardsService {
     const card: ServerCard = {
       id: randomUUID(),
       ...input,
+      // O CPF não é guardado no servidor, nem dentro do texto bruto (specs §10)
+      rawOcrText: redactCpf(input.rawOcrText),
       version: 0,
       createdAt: now,
       updatedAt: now,
@@ -39,6 +41,7 @@ export class CardsService {
     const updated: ServerCard = {
       ...existing,
       ...input,
+      ...(input.rawOcrText != null ? { rawOcrText: redactCpf(input.rawOcrText) } : {}),
       id: existing.id,
       createdAt: existing.createdAt,
       version: existing.version + 1,

@@ -55,6 +55,17 @@ describe('cards API', () => {
     expect(card.photoUri).toBeUndefined();
   });
 
+  it('POST não guarda o CPF que vem dentro do rawOcrText', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/cards',
+      headers,
+      payload: sampleInput({ rawOcrText: 'CPF: 123.456.789-00' }),
+    });
+
+    expect(res.json().rawOcrText).toBe('CPF: [CPF removido]');
+  });
+
   it('valida o corpo (400) quando faltam campos obrigatórios', async () => {
     const res = await app.inject({
       method: 'POST',
