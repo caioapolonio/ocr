@@ -17,6 +17,7 @@ export const cards = sqliteTable('cards', {
   educationLevel: text('education_level', { enum: EDUCATION_LEVELS }),
   registrationNumber: text('registration_number'),
   documentNumber: text('document_number'),
+  cia: text('cia'),
   issuer: text('issuer'),
   cpf: text('cpf'),
   birthDate: text('birth_date'),
@@ -34,3 +35,27 @@ export const cards = sqliteTable('cards', {
 
 export type CardRow = typeof cards.$inferSelect;
 export type NewCardRow = typeof cards.$inferInsert;
+
+const OUTBOX_OPS = ['create', 'update', 'delete'] as const;
+
+/**
+ * Fila de mutações feitas offline (specs.md §8). Cada create/update/delete
+ * enfileira uma linha; o motor de sync (M4) lê a fila, envia ao servidor e
+ * remove o que foi aceito. O payload não é guardado: no push lemos o estado
+ * atual da carteirinha (sync de registro completo por Last-Write-Wins).
+ */
+export const outbox = sqliteTable('outbox', {
+  id: text('id').primaryKey(),
+  entity: text('entity').notNull().default('card'),
+  op: text('op', { enum: OUTBOX_OPS }).notNull(),
+  entityId: text('entity_id').notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
+export type OutboxRow = typeof outbox.$inferSelect;
+
+/** Metadados do sync em formato chave/valor (ex.: `lastPulledAt`). */
+export const syncMeta = sqliteTable('sync_meta', {
+  key: text('key').primaryKey(),
+  value: text('value'),
+});

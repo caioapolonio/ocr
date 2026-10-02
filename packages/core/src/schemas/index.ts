@@ -3,3 +3,4 @@ export * from './primitives';
 export * from './studentCard';
 export * from './serverCard';
 export * from './sync';
+export * from './auth';

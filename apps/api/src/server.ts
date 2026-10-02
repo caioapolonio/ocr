@@ -1,11 +1,14 @@
 import { buildApp } from './app';
 import { db } from './db/client';
 import { env } from './env';
+import { DrizzleUsersRepository } from './modules/auth/users.drizzle';
 import { DrizzleCardsRepository } from './modules/cards/cards.drizzle';
 
 async function main(): Promise<void> {
   const app = await buildApp({
     cardsRepository: new DrizzleCardsRepository(db),
+    usersRepository: new DrizzleUsersRepository(db),
+    jwtSecret: env.JWT_SECRET,
     logger: { level: env.LOG_LEVEL },
   });
 

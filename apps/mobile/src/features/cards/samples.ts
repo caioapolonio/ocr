@@ -31,4 +31,18 @@ export const OCR_SAMPLES: OcrSample[] = [
       'Válida até 30/06/2024',
     ].join('\n'),
   },
+  {
+    // Simula o texto combinado frente+verso: a CIA vem do verso.
+    label: 'UBES — frente+verso (com CIA)',
+    text: [
+      'CARTEIRA DE IDENTIFICAÇÃO ESTUDANTIL',
+      'UBES - União Brasileira dos Estudantes Secundaristas',
+      'Nome: Bruno Almeida Lima',
+      'Instituição: Colégio Estadual Dom Pedro II',
+      'Curso: Ensino Médio',
+      'Matrícula: 2024987654',
+      'Validade: 31/03/2026',
+      'CIA: 000123456',
+    ].join('\n'),
+  },
 ];

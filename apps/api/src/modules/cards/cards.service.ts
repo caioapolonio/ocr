@@ -1,57 +1,61 @@
 import { randomUUID } from 'node:crypto';
-import type { CreateServerCard, ServerCard, UpdateServerCard } from '@ocr/core';
+import { redactCpf, type CreateServerCard, type ServerCard, type UpdateServerCard } from '@ocr/core';
 import type { CardsRepository, ListCardsOptions } from './cards.repository';
 
 /**
- * Regras de negócio das carteirinhas. É a dona dos campos gerenciados pelo
- * servidor: `id`, `version`, `createdAt/updatedAt` e o soft-delete (`deletedAt`).
+ * Regras de negócio das carteirinhas, escopadas por usuário (M5). É a dona dos
+ * campos gerenciados pelo servidor: `id`, `version`, `createdAt/updatedAt` e o
+ * soft-delete (`deletedAt`).
  */
 export class CardsService {
   constructor(private readonly repo: CardsRepository) {}
 
-  list(options: ListCardsOptions): Promise<ServerCard[]> {
-    return this.repo.list(options);
+  list(userId: string, options: ListCardsOptions): Promise<ServerCard[]> {
+    return this.repo.list(userId, options);
   }
 
-  async get(id: string): Promise<ServerCard | null> {
-    const card = await this.repo.findById(id);
+  async get(userId: string, id: string): Promise<ServerCard | null> {
+    const card = await this.repo.findById(userId, id);
     return card && !card.deletedAt ? card : null;
   }
 
-  create(input: CreateServerCard): Promise<ServerCard> {
+  create(userId: string, input: CreateServerCard): Promise<ServerCard> {
     const now = new Date().toISOString();
     const card: ServerCard = {
       id: randomUUID(),
       ...input,
+      // O CPF não é guardado no servidor, nem dentro do texto bruto (specs §10)
+      rawOcrText: redactCpf(input.rawOcrText),
       version: 0,
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
     };
-    return this.repo.create(card);
+    return this.repo.create(userId, card);
   }
 
-  async update(id: string, input: UpdateServerCard): Promise<ServerCard | null> {
-    const existing = await this.get(id);
+  async update(userId: string, id: string, input: UpdateServerCard): Promise<ServerCard | null> {
+    const existing = await this.get(userId, id);
     if (!existing) return null;
 
     const updated: ServerCard = {
       ...existing,
       ...input,
+      ...(input.rawOcrText != null ? { rawOcrText: redactCpf(input.rawOcrText) } : {}),
       id: existing.id,
       createdAt: existing.createdAt,
       version: existing.version + 1,
       updatedAt: new Date().toISOString(),
     };
-    return this.repo.update(updated);
+    return this.repo.update(userId, updated);
   }
 
-  async softDelete(id: string): Promise<boolean> {
-    const existing = await this.get(id);
+  async softDelete(userId: string, id: string): Promise<boolean> {
+    const existing = await this.get(userId, id);
     if (!existing) return false;
 
     const now = new Date().toISOString();
-    await this.repo.update({
+    await this.repo.update(userId, {
       ...existing,
       version: existing.version + 1,
       updatedAt: now,
